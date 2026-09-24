@@ -50,7 +50,7 @@ export default function LiveAuctionTeam({ setActiveTab }) {
   const remainingPurse = totalBudget - (myTeam.totalSpent || 0);
 
   // Calculate Next Minimum Bid
-  const increment = auction.bidIncrement || 2000000;
+  const increment = auction.bidIncrement || 100;
   let nextBidAmount = (auction.currentBid || 0) + increment;
   if (!auction.highestBidderTeamId && currentPlayer) {
     nextBidAmount = currentPlayer.basePrice;
@@ -58,14 +58,11 @@ export default function LiveAuctionTeam({ setActiveTab }) {
 
   const hasEnoughPurse = remainingPurse >= nextBidAmount;
 
-  // Check if this team is currently the highest bidder
+  // The server remains authoritative; the button is only an ergonomic hint.
   const isHighestBidder = auction.highestBidderTeamId === user?.teamId;
 
-  // Check if this team has a pending bid in the queue
-  const myPendingBid = auction.pendingBids.find(b => b.teamId === user?.teamId && b.status === 'Pending');
-
   const handleSubmitBid = async () => {
-    if (!isBidding || isSquadFull || isHighestBidder || myPendingBid || !hasEnoughPurse) return;
+    if (!isBidding || isSquadFull || !hasEnoughPurse) return;
     setSubmitting(true);
     await submitBid(nextBidAmount);
     setSubmitting(false);
@@ -252,15 +249,15 @@ export default function LiveAuctionTeam({ setActiveTab }) {
               {/* Massive 1-Tap BID Button */}
               <button
                 onClick={handleSubmitBid}
-                disabled={!isBidding || isTimeEnded || isSquadFull || isHighestBidder || !!myPendingBid || !hasEnoughPurse || submitting}
+                disabled={!isBidding || isTimeEnded || isSquadFull || !hasEnoughPurse || submitting}
                 className="btn btn-gold btn-xl"
                 style={{
                   width: '100%',
-                  boxShadow: isBidding && !isTimeEnded && !isHighestBidder && !isSquadFull && !myPendingBid && hasEnoughPurse
+                  boxShadow: isBidding && !isTimeEnded && !isSquadFull && hasEnoughPurse
                     ? '0 0 30px rgba(245, 158, 11, 0.5)'
                     : 'none',
-                  opacity: (!isBidding || isTimeEnded || isSquadFull || isHighestBidder || !!myPendingBid || !hasEnoughPurse) ? 0.6 : 1,
-                  cursor: (!isBidding || isTimeEnded || isSquadFull || isHighestBidder || !!myPendingBid || !hasEnoughPurse) ? 'not-allowed' : 'pointer'
+                  opacity: (!isBidding || isTimeEnded || isSquadFull || !hasEnoughPurse) ? 0.6 : 1,
+                  cursor: (!isBidding || isTimeEnded || isSquadFull || !hasEnoughPurse) ? 'not-allowed' : 'pointer'
                 }}
               >
                 <ArrowUpRight size={24} />
@@ -269,15 +266,10 @@ export default function LiveAuctionTeam({ setActiveTab }) {
 
               {/* Dynamic Status Feedback Box */}
               <div style={{ marginTop: '1.25rem', fontSize: '0.9rem', minHeight: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {myPendingBid ? (
-                  <div style={{ color: '#FBBF24', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
-                    <Clock size={16} className="live-dot" style={{ backgroundColor: '#FBBF24' }} />
-                    Your bid of {formatPurse(myPendingBid.amount)} has been submitted. Waiting for Host approval...
-                  </div>
-                ) : isHighestBidder ? (
+                {isHighestBidder ? (
                   <div style={{ color: '#34D399', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700 }}>
                     <CheckCircle2 size={18} />
-                    🎉 You are currently the highest bidder!
+                    You are leading. Bid again to raise the current bid.
                   </div>
                 ) : !hasEnoughPurse ? (
                   <div style={{ color: '#F87171', fontWeight: 600 }}>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuction } from '../context/AuctionContext';
 import PlayerAvatar from '../components/PlayerAvatar';
 import { formatPurse } from '../utils/formatCurrency';
+import { API_BASE } from '../config/api';
 import {
   UserPlus,
   Search,
@@ -43,7 +44,7 @@ export default function PlayerManagement() {
   const fetchPlayers = async () => {
     setLoading(true);
     try {
-      let url = `http://localhost:5000/api/players?`;
+      let url = `${API_BASE}/players?`;
       if (selectedCategory !== 'All') url += `category=${selectedCategory}&`;
       if (selectedStatus !== 'All') url += `status=${selectedStatus}&`;
       if (search.trim()) url += `search=${encodeURIComponent(search.trim())}&`;
@@ -110,7 +111,7 @@ export default function PlayerManagement() {
     formData.append('photo', file);
 
     try {
-      const res = await fetch('http://localhost:5000/api/players/upload-photo', {
+      const res = await fetch(`${API_BASE}/players/upload-photo`, {
         method: 'POST',
         body: formData
       });
@@ -137,8 +138,8 @@ export default function PlayerManagement() {
 
     try {
       const url = editingPlayer
-        ? `http://localhost:5000/api/players/${editingPlayer.id}`
-        : 'http://localhost:5000/api/players';
+        ? `${API_BASE}/players/${editingPlayer.id}`
+        : `${API_BASE}/players`;
       const method = editingPlayer ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
@@ -172,7 +173,7 @@ export default function PlayerManagement() {
     if (!window.confirm(`Delete player "${playerName}"?`)) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/players/${playerId}`, {
+      const res = await fetch(`${API_BASE}/players/${playerId}`, {
         method: 'DELETE'
       });
       const data = await res.json();

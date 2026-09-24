@@ -10,12 +10,9 @@ import {
   Play,
   Pause,
   RotateCcw,
-  Check,
-  X,
   Gavel,
   Shield,
   Clock,
-  UserCheck,
   UserX,
   AlertCircle,
   TrendingUp,
@@ -35,8 +32,6 @@ export default function LiveAuctionHost({ setActiveTab }) {
     startBidding,
     pauseBidding,
     resumeBidding,
-    acceptBid,
-    rejectBid,
     sellPlayer,
     markUnsold,
     showToast
@@ -56,7 +51,7 @@ export default function LiveAuctionHost({ setActiveTab }) {
   const isTimeEnded = auction.status === 'TIME_ENDED';
 
   // Calculate Next Minimum Bid
-  const increment = auction.bidIncrement || 2000000;
+  const increment = auction.bidIncrement || 100;
   let nextBidAmount = (auction.currentBid || 0) + increment;
   if (!auction.highestBidderTeamId && currentPlayer) {
     nextBidAmount = currentPlayer.basePrice;
@@ -197,7 +192,7 @@ export default function LiveAuctionHost({ setActiveTab }) {
           <div style={{ width: '1px', height: '30px', background: 'var(--border-subtle)' }} />
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>INCREMENT</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--gold-bright)' }}>{formatPurse(auction.bidIncrement || 2000000)}</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--gold-bright)' }}>{formatPurse(auction.bidIncrement || 100)}</div>
           </div>
         </div>
       </div>
@@ -282,7 +277,7 @@ export default function LiveAuctionHost({ setActiveTab }) {
                       🏆 {auction.highestBidderTeamName} {highestBidderTeam && `(${formatPurse(highestBidderTeam.remainingPurse)} Purse Left)`}
                     </span>
                   ) : (
-                    <span style={{ color: 'var(--text-dim)', fontStyle: 'italic' }}>No bids accepted yet</span>
+                    <span style={{ color: 'var(--text-dim)', fontStyle: 'italic' }}>No bids placed yet</span>
                   )}
                 </div>
 
@@ -298,7 +293,7 @@ export default function LiveAuctionHost({ setActiveTab }) {
                 </div>
               </div>
 
-              {/* Time Ended Banner (Case B: Accepted Bids Exist) */}
+              {/* Time Ended Banner when a leading team exists */}
               {isTimeEnded && (
                 <div style={{
                   background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(16, 185, 129, 0.2))',
@@ -454,42 +449,38 @@ export default function LiveAuctionHost({ setActiveTab }) {
             </div>
           </div>
 
-          {/* INCOMING BIDS QUEUE */}
+          {/* LIVE BID FEED */}
           <div className="card" style={{ flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <div>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 800 }}>Incoming Real-Time Bids</h3>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800 }}>Official Live Bids</h3>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                  Newest bids appear at the top. Click Accept to make official.
+                  Valid bids become official immediately and reset the timer.
                 </div>
               </div>
-              <span className="status-pill status-pending" style={{ fontSize: '0.75rem' }}>
-                {auction.pendingBids.filter(b => b.status === 'Pending').length} Pending
+              <span className="status-pill status-bidding" style={{ fontSize: '0.75rem' }}>
+                {auction.biddingHistory.length} Bids
               </span>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '340px', overflowY: 'auto', paddingRight: '4px' }}>
-              {auction.pendingBids.length === 0 ? (
+              {auction.biddingHistory.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--text-dim)', background: 'rgba(7, 11, 25, 0.4)', borderRadius: '12px' }}>
                   <Clock size={24} style={{ margin: '0 auto 0.5rem', opacity: 0.5 }} />
                   <div>No bids submitted yet for this player.</div>
                   {isBidding && <small style={{ color: '#FBBF24' }}>Connected teams can submit bids now!</small>}
                 </div>
               ) : (
-                auction.pendingBids.map(bid => {
-                  const isPending = bid.status === 'Pending';
-                  const isAccepted = bid.status === 'Accepted';
-
+                auction.biddingHistory.map(bid => {
+                  const isCurrentLeader = bid.teamId === auction.highestBidderTeamId && bid.amount === auction.currentBid;
                   return (
                     <div
                       key={bid.id}
                       style={{
-                        background: isAccepted
+                        background: isCurrentLeader
                           ? 'rgba(16, 185, 129, 0.12)'
-                          : isPending
-                          ? 'rgba(245, 158, 11, 0.1)'
                           : 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid ' + (isAccepted ? '#10B981' : isPending ? 'rgba(245, 158, 11, 0.4)' : 'var(--border-subtle)'),
+                        border: '1px solid ' + (isCurrentLeader ? '#10B981' : 'var(--border-subtle)'),
                         borderRadius: '12px',
                         padding: '0.85rem 1rem',
                         display: 'flex',
@@ -505,42 +496,21 @@ export default function LiveAuctionHost({ setActiveTab }) {
                             fontSize: '0.7rem',
                             padding: '1px 6px',
                             borderRadius: '4px',
-                            background: isAccepted ? 'rgba(16,185,129,0.3)' : isPending ? 'rgba(245,158,11,0.3)' : 'rgba(255,255,255,0.1)',
-                            color: isAccepted ? '#34D399' : isPending ? '#FBBF24' : 'var(--text-dim)',
+                            background: isCurrentLeader ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)',
+                            color: isCurrentLeader ? '#34D399' : 'var(--text-dim)',
                             fontWeight: 700
                           }}>
-                            {bid.status}
+                            {isCurrentLeader ? 'LEADING' : 'VALID'}
                           </span>
                         </div>
-                        <div style={{ fontSize: '1.3rem', fontWeight: 900, color: isAccepted ? '#34D399' : 'var(--gold-bright)' }}>
+                        <div style={{ fontSize: '1.3rem', fontWeight: 900, color: isCurrentLeader ? '#34D399' : 'var(--gold-bright)' }}>
                           {formatPurse(bid.amount)} <span style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--text-dim)' }}>({formatFullINR(bid.amount)})</span>
                         </div>
                       </div>
 
-                      {isPending ? (
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <button
-                            onClick={() => rejectBid(bid.id)}
-                            className="btn btn-outline btn-sm"
-                            style={{ color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.4)', padding: '0.45rem 0.75rem' }}
-                            title="Reject Bid"
-                          >
-                            <X size={16} /> Reject
-                          </button>
-                          <button
-                            onClick={() => acceptBid(bid.id)}
-                            className="btn btn-emerald btn-sm"
-                            style={{ padding: '0.45rem 0.95rem' }}
-                            title="Accept and make official current bid"
-                          >
-                            <Check size={16} /> Accept
-                          </button>
-                        </div>
-                      ) : (
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                          {isAccepted ? '✓ Current Leader' : 'Superseded'}
-                        </div>
-                      )}
+                      <div style={{ fontSize: '0.75rem', color: isCurrentLeader ? '#34D399' : 'var(--text-dim)' }}>
+                        {isCurrentLeader ? 'Current Leader' : 'Official bid'}
+                      </div>
                     </div>
                   );
                 })

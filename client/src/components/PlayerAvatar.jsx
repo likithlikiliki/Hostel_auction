@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { User } from 'lucide-react';
+import { apiUrl } from '../config/api';
 
 export default function PlayerAvatar({ photoUrl, name = '', size = 'md', category = 'Batsman' }) {
   const [imgError, setImgError] = useState(false);
@@ -13,10 +14,10 @@ export default function PlayerAvatar({ photoUrl, name = '', size = 'md', categor
 
   const dim = sizeMap[size] || sizeMap.md;
 
-  // Resolve photoUrl (if relative path, prefix with localhost:5000)
+  // Resolve photoUrl (if relative path, prefix with configured backend URL)
   let src = photoUrl;
   if (photoUrl && photoUrl.startsWith('/uploads')) {
-    src = `http://localhost:5000${photoUrl}`;
+    src = apiUrl(photoUrl);
   }
 
   const categoryBg = {

@@ -2,9 +2,9 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { io } from 'socket.io-client';
 import confetti from 'canvas-confetti';
 import { useAuth } from './AuthContext';
+import { API_BASE, API_URL } from '../config/api';
 
 const AuctionContext = createContext();
-const SOCKET_URL = 'http://localhost:5000';
 
 export const AuctionProvider = ({ children }) => {
   const { user, role } = useAuth();
@@ -131,7 +131,7 @@ export const AuctionProvider = ({ children }) => {
   // Fetch initial history
   const fetchHistory = useCallback(async () => {
     try {
-      const res = await fetch(`${SOCKET_URL}/api/auction/history`);
+      const res = await fetch(`${API_BASE}/auction/history`);
       const data = await res.json();
       if (data.success) {
         setHistory(data.history);
@@ -143,7 +143,7 @@ export const AuctionProvider = ({ children }) => {
 
   // Socket Connection Setup
   useEffect(() => {
-    const socket = io(SOCKET_URL, {
+    const socket = io(API_URL, {
       transports: ['websocket', 'polling']
     });
     socketRef.current = socket;
@@ -193,21 +193,10 @@ export const AuctionProvider = ({ children }) => {
       showToast('Bidding is now LIVE! Teams can place bids.', 'success');
     });
 
-    socket.on('auction:new_pending_bid', (data) => {
+    socket.on('auction:bid_placed', (data) => {
       if (data.auction) setAuction(data.auction);
       playSound('bid');
-      showToast(`New Bid from ${data.bid.teamName}: ₹${data.bid.amount.toLocaleString('en-IN')}`, 'info');
-    });
-
-    socket.on('auction:bid_accepted', (data) => {
-      if (data.auction) setAuction(data.auction);
-      playSound('accept');
-      showToast(`Bid Accepted: ₹${data.acceptedBid.amount.toLocaleString('en-IN')} by ${data.acceptedBid.teamName}. Timer reset!`, 'success');
-    });
-
-    socket.on('auction:timer_reset', (data) => {
-      playSound('bid');
-      showToast(`⏱️ Timer reset to ${data.duration || 10} seconds!`, 'info');
+      showToast(`${data.bid.teamName} bid ₹${data.bid.amount.toLocaleString('en-IN')} - now leading`, 'success');
     });
 
     socket.on('auction:timer_tick', (data) => {
@@ -235,12 +224,6 @@ export const AuctionProvider = ({ children }) => {
       if (data.settings) {
         showToast(`Settings updated (Timer: ${data.settings.biddingTimeSeconds || 10}s)`, 'info');
       }
-    });
-
-    socket.on('auction:bid_rejected', (data) => {
-      if (data.auction) setAuction(data.auction);
-      playSound('buzzer');
-      showToast(`Bid of ₹${data.rejectedBid.amount.toLocaleString('en-IN')} was rejected by Host`, 'warning');
     });
 
     socket.on('auction:player_sold', (data) => {
@@ -314,24 +297,6 @@ export const AuctionProvider = ({ children }) => {
     });
   }, []);
 
-  const acceptBid = useCallback((bidId) => {
-    return new Promise((resolve) => {
-      socketRef.current?.emit('host:accept_bid', bidId, (res) => {
-        if (!res?.success) showToast(res?.message || 'Failed to accept bid', 'danger');
-        resolve(res);
-      });
-    });
-  }, [showToast]);
-
-  const rejectBid = useCallback((bidId) => {
-    return new Promise((resolve) => {
-      socketRef.current?.emit('host:reject_bid', bidId, (res) => {
-        if (!res?.success) showToast(res?.message || 'Failed to reject bid', 'danger');
-        resolve(res);
-      });
-    });
-  }, [showToast]);
-
   const sellPlayer = useCallback(() => {
     return new Promise((resolve) => {
       socketRef.current?.emit('host:sell_player', (res) => {
@@ -363,7 +328,7 @@ export const AuctionProvider = ({ children }) => {
         if (!res?.success) {
           showToast(res?.message || 'Bid submission failed', 'danger');
         } else {
-          showToast(`Bid of ₹${amount.toLocaleString('en-IN')} submitted! Waiting for Host approval...`, 'info');
+          showToast(`Bid of ₹${amount.toLocaleString('en-IN')} is now official.`, 'success');
         }
         resolve(res);
       });
@@ -391,8 +356,6 @@ export const AuctionProvider = ({ children }) => {
       startBidding,
       pauseBidding,
       resumeBidding,
-      acceptBid,
-      rejectBid,
       sellPlayer,
       markUnsold,
       submitBid,

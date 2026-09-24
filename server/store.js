@@ -179,7 +179,7 @@ const INITIAL_PLAYERS = [];
 
 const INITIAL_SETTINGS = {
   defaultTeamBudget: DEFAULT_PURSE, // 100 Cr
-  bidIncrement: 2000000, // 20 Lakh
+  bidIncrement: 100,
   minTeamPlayers: 8,
   maxTeamPlayers: 10,
   biddingTimeSeconds: 10, // Default 10 seconds
@@ -192,7 +192,7 @@ const INITIAL_AUCTION = {
   currentBid: 0,
   highestBidderTeamId: null,
   highestBidderTeamName: null,
-  bidIncrement: 2000000,
+  bidIncrement: 100,
   pendingBids: [],
   biddingHistory: [],
   biddingStartedAt: null,
@@ -226,6 +226,7 @@ class Store {
         if (!this.data.settings) this.data.settings = { ...INITIAL_SETTINGS };
         if (!this.data.settings.defaultTeamBudget) this.data.settings.defaultTeamBudget = DEFAULT_PURSE;
         if (!this.data.settings.biddingTimeSeconds) this.data.settings.biddingTimeSeconds = 10;
+        if (!this.data.settings.bidIncrement) this.data.settings.bidIncrement = 100;
         if (!this.data.auction) this.data.auction = { ...INITIAL_AUCTION };
         if (!this.data.auction.logs) this.data.auction.logs = [];
         if (!this.data.history) this.data.history = [];
@@ -513,7 +514,7 @@ class Store {
     return {
       ...this.data.auction,
       currentPlayer,
-      bidIncrement: this.data.settings.bidIncrement || 2000000,
+      bidIncrement: this.data.settings.bidIncrement || 100,
       timerDurationSeconds: this.data.settings.biddingTimeSeconds || 10,
       logs: this.data.auction.logs || [],
       serverTime: Date.now()
@@ -525,7 +526,7 @@ class Store {
     const now = new Date();
     const logEntry = {
       id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      type, // 'start', 'bid_submit', 'bid_accept', 'bid_reject', 'timer_reset', 'pause', 'resume', 'time_ended', 'sold', 'unsold', 'select'
+      type, // 'start', 'bid_submit', 'timer_reset', 'pause', 'resume', 'time_ended', 'sold', 'unsold', 'select'
       message,
       timestamp: now.toISOString(),
       timeStr: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -545,41 +546,14 @@ class Store {
   }
 
   // --- BID MANAGEMENT ---
-  addPendingBid(bid) {
-    this.data.auction.pendingBids.unshift(bid);
+  recordBid(bid) {
+    this.data.auction.currentBid = bid.amount;
+    this.data.auction.highestBidderTeamId = bid.teamId;
+    this.data.auction.highestBidderTeamName = bid.teamName;
+    this.data.auction.biddingHistory.unshift(bid);
+    this.data.auction.pendingBids = [];
     this.save();
-    return this.data.auction.pendingBids;
-  }
-
-  resolveBid(bidId, status) {
-    const bidIndex = this.data.auction.pendingBids.findIndex(b => b.id === bidId);
-    if (bidIndex === -1) return null;
-    const bid = this.data.auction.pendingBids[bidIndex];
-    bid.status = status;
-    bid.resolvedAt = new Date().toISOString();
-
-    if (status === 'Accepted') {
-      this.data.auction.currentBid = bid.amount;
-      this.data.auction.highestBidderTeamId = bid.teamId;
-      this.data.auction.highestBidderTeamName = bid.teamName;
-      this.data.auction.biddingHistory.unshift({
-        id: bid.id,
-        teamId: bid.teamId,
-        teamName: bid.teamName,
-        amount: bid.amount,
-        timestamp: bid.resolvedAt
-      });
-      // Mark lower/equal pending bids as superseded
-      this.data.auction.pendingBids.forEach(b => {
-        if (b.id !== bidId && b.status === 'Pending' && b.amount <= bid.amount) {
-          b.status = 'Superseded';
-          b.resolvedAt = new Date().toISOString();
-        }
-      });
-    }
-
-    this.save();
-    return { bid, auctionState: this.getAuctionState() };
+    return this.getAuctionState();
   }
 
   // --- SELL & UNSOLD ---
@@ -718,7 +692,7 @@ class Store {
       currentBid: chosenPlayer.basePrice,
       highestBidderTeamId: null,
       highestBidderTeamName: null,
-      bidIncrement: this.data.settings.bidIncrement || 2000000,
+      bidIncrement: this.data.settings.bidIncrement || 100,
       pendingBids: [],
       biddingHistory: [],
       biddingStartedAt: null,

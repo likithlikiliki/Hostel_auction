@@ -329,7 +329,7 @@ export default function CountdownTimer({ auction, size = 'lg' }) {
             borderRadius: '9999px',
             border: '1px solid var(--border-subtle)'
           }}>
-            ⏱️ Timer: {maxDuration}s per accepted bid
+            ⏱️ Timer: {maxDuration}s per valid bid
           </div>
         ) : null}
       </div>

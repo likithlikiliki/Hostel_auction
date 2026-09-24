@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuction } from '../context/AuctionContext';
 import PlayerAvatar from '../components/PlayerAvatar';
 import { formatPurse } from '../utils/formatCurrency';
+import { API_BASE } from '../config/api';
 import {
   History,
   Download,
@@ -27,7 +28,7 @@ export default function AuctionHistory() {
   });
 
   const handleExportCSV = () => {
-    window.open('http://localhost:5000/api/auction/history/export', '_blank');
+    window.open(`${API_BASE}/auction/history/export`, '_blank');
   };
 
   return (

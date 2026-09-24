@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuction } from '../context/AuctionContext';
 import { formatPurse, formatFullINR } from '../utils/formatCurrency';
+import { API_BASE } from '../config/api';
 import {
   Users,
   UserCheck,
@@ -21,7 +22,7 @@ export default function HostDashboard({ setActiveTab }) {
   const [validationData, setValidationData] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/teams/validation/summary')
+    fetch(`${API_BASE}/teams/validation/summary`)
       .then(res => res.json())
       .then(data => {
         if (data.success) setValidationData(data.validation);

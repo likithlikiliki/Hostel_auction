@@ -17,14 +17,12 @@ export default function AuctionLogFeed({ logs = [], maxHeight = '220px' }) {
     switch (type) {
       case 'start':
         return <Play size={13} color="#10B981" />;
-      case 'bid_accept':
+      case 'bid_submit':
         return <CheckCircle2 size={13} color="#10B981" />;
       case 'timer_reset':
         return <RotateCcw size={13} color="#38BDF8" />;
       case 'bid_submit':
         return <ArrowUpRight size={13} color="#FBBF24" />;
-      case 'bid_reject':
-        return <XCircle size={13} color="#EF4444" />;
       case 'pause':
         return <Pause size={13} color="#F59E0B" />;
       case 'resume':
@@ -75,14 +73,14 @@ export default function AuctionLogFeed({ logs = [], maxHeight = '220px' }) {
                 fontSize: '0.8rem',
                 padding: '0.35rem 0.5rem',
                 borderRadius: '6px',
-                background: log.type === 'bid_accept'
+                background: log.type === 'bid_submit'
                   ? 'rgba(16, 185, 129, 0.08)'
                   : log.type === 'timer_reset'
                   ? 'rgba(56, 189, 248, 0.08)'
                   : log.type === 'sold'
                   ? 'rgba(245, 158, 11, 0.12)'
                   : 'rgba(255, 255, 255, 0.02)',
-                borderLeft: log.type === 'bid_accept'
+                borderLeft: log.type === 'bid_submit'
                   ? '2px solid #10B981'
                   : log.type === 'timer_reset'
                   ? '2px solid #38BDF8'

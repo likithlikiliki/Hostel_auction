@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuction } from '../context/AuctionContext';
 import ConfirmModal from '../components/ConfirmModal';
+import { API_BASE } from '../config/api';
 import {
   Settings as SettingsIcon,
   RotateCcw,
@@ -25,7 +26,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/auction/settings')
+    fetch(`${API_BASE}/auction/settings`)
       .then(res => res.json())
       .then(data => {
         if (data.success && data.settings) {
@@ -43,7 +44,7 @@ export default function Settings() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/auction/settings', {
+      const res = await fetch(`${API_BASE}/auction/settings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -71,7 +72,7 @@ export default function Settings() {
   const handleResetTournament = async () => {
     setConfirmResetOpen(false);
     try {
-      const res = await fetch('http://localhost:5000/api/auction/reset', {
+      const res = await fetch(`${API_BASE}/auction/reset`, {
         method: 'POST'
       });
       const data = await res.json();
@@ -102,7 +103,7 @@ export default function Settings() {
             <Clock size={20} color="#38BDF8" /> Bidding Countdown Timer
           </h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginBottom: '1.25rem' }}>
-            The countdown duration granted for bidding. Resets automatically to this full duration whenever the Host accepts an official bid.
+            The countdown duration granted for bidding. Resets automatically to this full duration whenever a valid bid is placed.
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.75rem', marginBottom: '1rem' }}>

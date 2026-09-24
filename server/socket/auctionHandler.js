@@ -14,10 +14,9 @@ function clearServerTimer() {
   }
 }
 
-function startServerCountdown(durationMs, io) {
+function startServerCountdown(durationMs, io, targetEnd = Date.now() + durationMs) {
   clearServerTimer();
   console.log(`[Timer] Started server countdown for ${durationMs}ms`);
-  const targetEnd = Date.now() + durationMs;
 
   // Immediate first tick broadcast
   io.emit('auction:timer_tick', {
@@ -56,7 +55,7 @@ function handleTimerExpiration(io) {
   const player = currentAuction.currentPlayer;
   const playerName = player ? player.name : 'Player';
 
-  // Case A: No accepted bids exist
+  // Case A: No valid bids exist
   if (!currentAuction.highestBidderTeamId) {
     console.log(`[Timer] Time expired with NO bids for ${playerName}. Automatically marking UNSOLD.`);
     try {
@@ -81,7 +80,7 @@ function handleTimerExpiration(io) {
       console.error('[Timer] Error auto-marking unsold:', err);
     }
   } else {
-    // Case B: Accepted bids exist!
+    // Case B: A valid leading bid exists.
     console.log(`[Timer] Bidding time ended for ${playerName}. Highest bid: ₹${currentAuction.currentBid} by ${currentAuction.highestBidderTeamName}. Waiting for Host to finalize.`);
     try {
       const updatedAuction = store.updateAuction({
@@ -323,80 +322,7 @@ module.exports = function auctionSocketHandler(io) {
       }
     });
 
-    // 6. Accept Bid -> RESETS TIMER TO FULL CONFIGURATION (e.g. 10s)
-    socket.on('host:accept_bid', (bidId, callback) => {
-      try {
-        const result = store.resolveBid(bidId, 'Accepted');
-        if (!result) {
-          const msg = 'Bid not found';
-          if (callback) callback({ success: false, message: msg });
-          return;
-        }
-
-        // Reset timer to configured duration
-        const durationSec = store.getSettings().biddingTimeSeconds || 10;
-        const durationMs = durationSec * 1000;
-        const newBiddingEndsAt = Date.now() + durationMs;
-
-        const updatedAuction = store.updateAuction({
-          biddingEndsAt: newBiddingEndsAt,
-          pausedRemainingMs: null,
-          timerDurationSeconds: durationSec
-        });
-
-        store.addAuctionLog('bid_accept', `Host ACCEPTED bid of ₹${result.bid.amount.toLocaleString('en-IN')} from ${result.bid.teamName}.`);
-        store.addAuctionLog('timer_reset', `Timer RESET to ${durationSec} seconds.`);
-
-        // Reset server countdown timer
-        startServerCountdown(durationMs, io);
-
-        io.emit('auction:bid_accepted', {
-          acceptedBid: result.bid,
-          auction: updatedAuction
-        });
-        io.emit('auction:timer_reset', {
-          biddingEndsAt: newBiddingEndsAt,
-          duration: durationSec
-        });
-        io.emit('auction:state_changed', {
-          auction: updatedAuction,
-          stats: store.getDashboardStats()
-        });
-
-        if (callback) callback({ success: true, bid: result.bid, auction: updatedAuction });
-      } catch (err) {
-        if (callback) callback({ success: false, message: err.message });
-      }
-    });
-
-    // 7. Reject Bid -> DOES NOT RESET TIMER
-    socket.on('host:reject_bid', (bidId, callback) => {
-      try {
-        const result = store.resolveBid(bidId, 'Rejected');
-        if (!result) {
-          const msg = 'Bid not found';
-          if (callback) callback({ success: false, message: msg });
-          return;
-        }
-
-        store.addAuctionLog('bid_reject', `Host REJECTED bid of ₹${result.bid.amount.toLocaleString('en-IN')} from ${result.bid.teamName}.`);
-
-        io.emit('auction:bid_rejected', {
-          rejectedBid: result.bid,
-          auction: result.auctionState
-        });
-        io.emit('auction:state_changed', {
-          auction: result.auctionState,
-          stats: store.getDashboardStats()
-        });
-
-        if (callback) callback({ success: true, bid: result.bid, auction: result.auctionState });
-      } catch (err) {
-        if (callback) callback({ success: false, message: err.message });
-      }
-    });
-
-    // 8. Sell Player -> Confirmed by Host
+    // 6. Sell Player -> Confirmed by Host
     socket.on('host:sell_player', (callback) => {
       try {
         clearServerTimer();
@@ -424,7 +350,7 @@ module.exports = function auctionSocketHandler(io) {
       }
     });
 
-    // 9. Mark Unsold -> Confirmed by Host
+    // 7. Mark Unsold -> Confirmed by Host
     socket.on('host:mark_unsold', (callback) => {
       try {
         clearServerTimer();
@@ -449,7 +375,7 @@ module.exports = function auctionSocketHandler(io) {
       }
     });
 
-    // 10. Update Settings
+    // 8. Update Settings
     socket.on('host:update_settings', (newSettings, callback) => {
       try {
         const updated = store.updateSettings(newSettings);
@@ -503,14 +429,7 @@ module.exports = function auctionSocketHandler(io) {
           return socket.emit('error:alert', { message: msg });
         }
 
-        // 5. Check if team is already the highest bidder
-        if (auctionState.highestBidderTeamId === team.id) {
-          const msg = 'Your team is already the highest bidder!';
-          if (callback) callback({ success: false, message: msg });
-          return socket.emit('error:alert', { message: msg });
-        }
-
-        // 6. Check Team Remaining Purse
+        // 5. Check Team Remaining Purse
         const remainingPurse = (team.totalBudget || 1000000000) - (team.totalSpent || 0);
         if (Number(amount) > remainingPurse) {
           const purseFormatted = (remainingPurse >= 10000000) 
@@ -523,8 +442,8 @@ module.exports = function auctionSocketHandler(io) {
           return socket.emit('error:alert', { message: msg });
         }
 
-        // 7. Check Bid Amount
-        const minIncrement = settings.bidIncrement || 2000000;
+        // 6. Check Bid Amount
+        const minIncrement = settings.bidIncrement || 100;
         let minimumRequiredBid = auctionState.currentBid + minIncrement;
         if (!auctionState.highestBidderTeamId) {
           minimumRequiredBid = auctionState.currentBid || auctionState.currentPlayer.basePrice;
@@ -537,15 +456,7 @@ module.exports = function auctionSocketHandler(io) {
           return socket.emit('error:alert', { message: msg });
         }
 
-        // 8. Check if team already has a Pending bid
-        const existingPending = auctionState.pendingBids.find(b => b.teamId === team.id && b.status === 'Pending');
-        if (existingPending) {
-          const msg = 'You already have a pending bid waiting for Host approval';
-          if (callback) callback({ success: false, message: msg });
-          return socket.emit('error:alert', { message: msg });
-        }
-
-        // Create new pending bid
+        // Update the official bid immediately after all server-side checks pass.
         const newBid = {
           id: `B_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
           playerId: auctionState.currentPlayerId,
@@ -553,26 +464,39 @@ module.exports = function auctionSocketHandler(io) {
           teamName: team.name,
           teamColor: team.color,
           amount: bidAmount,
-          status: 'Pending',
+          timestamp: new Date().toISOString(),
           createdAt: new Date().toISOString()
         };
 
-        store.addPendingBid(newBid);
+        const durationSec = settings.biddingTimeSeconds || 10;
+        const newBiddingEndsAt = Date.now() + (durationSec * 1000);
+        store.recordBid(newBid);
+        store.updateAuction({
+          biddingEndsAt: newBiddingEndsAt,
+          pausedRemainingMs: null,
+          timerDurationSeconds: durationSec
+        });
+        store.addAuctionLog('bid_submit', `${team.name} placed a valid bid of ₹${bidAmount.toLocaleString('en-IN')}.`);
+        store.addAuctionLog('timer_reset', `Timer reset to ${durationSec} seconds after ${team.name}'s bid.`);
+        const finalAuction = store.getAuctionState();
 
-        // Log the bid submission
-        store.addAuctionLog('bid_submit', `${team.name} submitted bid of ₹${bidAmount.toLocaleString('en-IN')}. Awaiting Host approval.`);
-
-        // Notify Host and All Clients (NOTE: Does NOT reset timer)
-        io.emit('auction:new_pending_bid', {
+        startServerCountdown(durationSec * 1000, io, finalAuction.biddingEndsAt);
+        io.emit('auction:bid_placed', {
           bid: newBid,
-          auction: store.getAuctionState()
+          currentBid: finalAuction.currentBid,
+          leadingTeam: finalAuction.highestBidderTeamName,
+          leadingTeamId: finalAuction.highestBidderTeamId,
+          bidder: { id: team.id, name: team.name, color: team.color },
+          biddingEndsAt: finalAuction.biddingEndsAt,
+          status: finalAuction.status,
+          auction: finalAuction
         });
         io.emit('auction:state_changed', {
-          auction: store.getAuctionState(),
+          auction: finalAuction,
           stats: store.getDashboardStats()
         });
 
-        if (callback) callback({ success: true, bid: newBid });
+        if (callback) callback({ success: true, bid: newBid, auction: finalAuction });
       } catch (err) {
         console.error('team:submit_bid error:', err);
         if (callback) callback({ success: false, message: err.message });

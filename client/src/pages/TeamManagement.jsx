@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuction } from '../context/AuctionContext';
 import { useAuth } from '../context/AuthContext';
 import { formatPurse, formatFullINR } from '../utils/formatCurrency';
+import { API_BASE } from '../config/api';
 import {
   Users,
   UserPlus,
@@ -68,8 +69,8 @@ export default function TeamManagement() {
     setLoading(true);
     try {
       const url = editingTeam
-        ? `http://localhost:5000/api/teams/${editingTeam.id}`
-        : 'http://localhost:5000/api/teams';
+        ? `${API_BASE}/teams/${editingTeam.id}`
+        : `${API_BASE}/teams`;
       const method = editingTeam ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
@@ -110,7 +111,7 @@ export default function TeamManagement() {
     if (!window.confirm(`Are you sure you want to delete team "${teamName}"?`)) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/teams/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}/teams/${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         showToast(`Team "${teamName}" deleted successfully`, 'success');
@@ -126,7 +127,7 @@ export default function TeamManagement() {
 
   const handleLoadSampleTeams = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/teams/sample/load', { method: 'POST' });
+      const res = await fetch(`${API_BASE}/teams/sample/load`, { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         showToast('Demo data loaded successfully!', 'success');

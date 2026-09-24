@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useAuction } from '../context/AuctionContext';
+import { API_BASE } from '../config/api';
 import {
   UploadCloud,
   FileSpreadsheet,
@@ -50,7 +51,7 @@ export default function ImportPlayers({ setActiveTab }) {
     formData.append('file', file);
 
     try {
-      const res = await fetch('http://localhost:5000/api/players/import-file', {
+      const res = await fetch(`${API_BASE}/players/import-file`, {
         method: 'POST',
         body: formData
       });
