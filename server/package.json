@@ -1,0 +1,19 @@
+{
+  "name": "hostel-cricket-auction-server",
+  "version": "1.0.0",
+  "description": "Backend server with real-time Socket.IO for Hostel Cricket Auction",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "csv-parser": "^3.0.0",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.7.5",
+    "uuid": "^9.0.1",
+    "xlsx": "^0.18.5"
+  }
+}

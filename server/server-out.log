@@ -1,0 +1,36 @@
+===========================================
+🏏 Hostel Cricket Auction Server running on port 5000
+🌐 API endpoint: http://localhost:5000/api
+📡 Socket.IO initialized
+===========================================
+[Socket] Client connected: Rh7P4E93XsoZnsZxAAAA
+[Socket] Client disconnected: Rh7P4E93XsoZnsZxAAAA
+[Socket] Client connected: AMTwxq5GgQo7O-KsAAAB
+[Socket] Host joined host-room (AMTwxq5GgQo7O-KsAAAB)
+[Socket] Client disconnected: AMTwxq5GgQo7O-KsAAAB
+[Socket] Client connected: pSPK7Gp5wj21L8O_AAAC
+[Socket] Host joined host-room (pSPK7Gp5wj21L8O_AAAC)
+[Timer] Started server countdown for 1588ms
+[Timer] Time expired with NO bids for Rishabh Pant. Automatically marking UNSOLD.
+[Timer] Started server countdown for 5000ms
+[Timer] Time expired with NO bids for SHAKSHI. Automatically marking UNSOLD.
+[Timer] Started server countdown for 5000ms
+[Timer] Time expired with NO bids for rakesh. Automatically marking UNSOLD.
+[Socket] Client disconnected: pSPK7Gp5wj21L8O_AAAC
+[Socket] Client connected: V3thMsrRuBewk8zjAAAD
+[Socket] Host joined host-room (V3thMsrRuBewk8zjAAAD)
+[Socket] Client connected: 20iYOJj3VjQT3ubzAAAE
+[Socket] Client disconnected: 20iYOJj3VjQT3ubzAAAE
+[Socket] Client connected: jemVureuIEDkJ8LOAAAF
+[Socket] Host joined host-room (jemVureuIEDkJ8LOAAAF)
+[Socket] Client connected: kExz52FFbmjG_10GAAAG
+[Socket] Client disconnected: kExz52FFbmjG_10GAAAG
+[Socket] Client connected: huUKgCtzZkNaeAQeAAAH
+[Socket] Host joined host-room (huUKgCtzZkNaeAQeAAAH)
+[Socket] Client connected: 779xt2OAr9ivUBcBAAAI
+[Socket] Host joined host-room (779xt2OAr9ivUBcBAAAI)
+[Socket] Client disconnected: V3thMsrRuBewk8zjAAAD
+[Socket] Client connected: 7C9FJVtegkgkYaSNAAAJ
+[Socket] Host joined host-room (7C9FJVtegkgkYaSNAAAJ)
+[Socket] Client connected: re7RCq6y9K7NpOXzAAAK
+[Socket] Host joined host-room (re7RCq6y9K7NpOXzAAAK)

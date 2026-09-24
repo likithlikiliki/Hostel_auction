@@ -1,0 +1,107 @@
+{
+  "teams": [
+    {
+      "id": "team_1790229292856_q0oai",
+      "name": "team nova",
+      "owner": "likith",
+      "loginId": "team01",
+      "password": "password123",
+      "players": [],
+      "playerCount": 0,
+      "totalSpent": 0,
+      "totalBudget": 1000000000,
+      "maxPlayers": 10,
+      "minPlayers": 8,
+      "color": "#3B82F6",
+      "createdAt": "2026-09-24T05:54:52.856Z"
+    },
+    {
+      "id": "team_1790230771552_xm7hr",
+      "name": "team apex",
+      "owner": "appi",
+      "loginId": "team02",
+      "password": "password123",
+      "players": [],
+      "playerCount": 0,
+      "totalSpent": 0,
+      "totalBudget": 1000000000,
+      "maxPlayers": 10,
+      "minPlayers": 8,
+      "color": "#8B5CF6",
+      "createdAt": "2026-09-24T06:19:31.552Z"
+    }
+  ],
+  "players": [
+    {
+      "id": "P8260",
+      "name": "kjhhfg",
+      "photoUrl": "",
+      "category": "Batsman",
+      "basePrice": 500000,
+      "status": "Unsold",
+      "soldTo": null,
+      "soldPrice": null,
+      "soldTeamName": null
+    }
+  ],
+  "auction": {
+    "status": "UNSOLD",
+    "currentPlayerId": "P8260",
+    "currentBid": 500000,
+    "highestBidderTeamId": null,
+    "highestBidderTeamName": null,
+    "bidIncrement": 2000000,
+    "pendingBids": [],
+    "biddingHistory": [],
+    "biddingStartedAt": 1790230788200,
+    "biddingEndsAt": 1790230798200,
+    "pausedRemainingMs": null,
+    "timerDurationSeconds": 10,
+    "logs": [
+      {
+        "id": "log_1790230798210_ridp",
+        "type": "unsold",
+        "message": "TIME UP! No bids received. kjhhfg marked as UNSOLD.",
+        "timestamp": "2026-09-24T06:19:58.210Z",
+        "timeStr": "11:49:58 am"
+      },
+      {
+        "id": "log_1790230788200_4kls",
+        "type": "start",
+        "message": "Bidding started for kjhhfg. 10-second countdown active.",
+        "timestamp": "2026-09-24T06:19:48.200Z",
+        "timeStr": "11:49:48 am"
+      },
+      {
+        "id": "log_1790230777758_e5t9",
+        "type": "select",
+        "message": "kjhhfg (Batsman) brought to auction stage. Base price: ₹5,00,000",
+        "timestamp": "2026-09-24T06:19:37.758Z",
+        "timeStr": "11:49:37 am"
+      }
+    ]
+  },
+  "settings": {
+    "defaultTeamBudget": 1000000000,
+    "bidIncrement": 2000000,
+    "minTeamPlayers": 8,
+    "maxTeamPlayers": 10,
+    "biddingTimeSeconds": 10,
+    "hostPassword": "password123"
+  },
+  "history": [
+    {
+      "id": "H_1790230798209",
+      "playerId": "P8260",
+      "playerName": "kjhhfg",
+      "category": "Batsman",
+      "photoUrl": "",
+      "basePrice": 500000,
+      "finalPrice": null,
+      "teamId": null,
+      "teamName": null,
+      "status": "Unsold",
+      "timestamp": "2026-09-24T06:19:58.209Z"
+    }
+  ]
+}
